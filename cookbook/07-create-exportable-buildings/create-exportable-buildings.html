@@ -139,6 +139,8 @@
 
   
 
+  let vertAxis = new THREE.Vector3(0,0,1);
+  let negVertAxis = new THREE.Vector3(0,0,-1);
 	let json;
 	let gbxml;
 
@@ -968,8 +970,8 @@
 
 
 
-// now all geometry created and in position, so read local data, transform to world, and add as text to items;
-
+  // now all geometry created and in position, so read local data, transform to world, and add as text to items;
+  //by "angles" the author appears to mean "asimuth"
 	function addAngles() {
 
 		theBuilding.group.updateMatrixWorld( true );
@@ -984,9 +986,20 @@
 					angle = angle < 0 ? angle + 360 : angle;
 
 					child.userData.angle = angle;
-//console.log( 'ang', child.name, angle );
+          console.log( 'ang', child.name, angle );
 
 			}
+			if(child instanceof THREE.Mesh)
+			{
+				console.log('trying to calculate tilt');
+				console.log(child)
+
+				//console.log('tilt', Math.round( - child.getWorldRotation().x * 180 / Math.PI ))
+				//let tilt = 
+			}
+			
+				
+			
 
 		} );
 
@@ -1309,16 +1322,18 @@
 
 				const slab = slabs.children[ j ];
 
+        
 				const slabGeometry = new THREE.Geometry().fromBufferGeometry( slab.geometry );
 //console.log( 'slabGeometry', slabGeometry  );
 
 				const area = THREE.ShapeUtils.area( slabGeometry.vertices.reverse() );
 				building.Area += area;
-				console.log('the slab area: ', area);
-				console.log( 'area', building.Area );
-				console.log( 'area', area.toLocaleString() );
-				console.log( 'volume', ( area * theBuilding.storeyHeight ).toLocaleString() );
+				//console.log('the slab area: ', area);
+				//console.log( 'area', building.Area );
+				//console.log( 'area', area.toLocaleString() );
+				//console.log( 'volume', ( area * theBuilding.storeyHeight ).toLocaleString() );
 
+        //decide whether to make ceiling or roof
 				const type = storeyCount === theBuilding.storeys ? 'slabRoof' : 'slabCeiling';
 
 				let surfaceSlab = getSlabType( type, storeyCount, surfaceCount, theBuilding.spaceCount );
@@ -1329,7 +1344,6 @@
 				ceiling.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, theBuilding.storeyHeight + delta ) );
 				ceiling.geometry.verticesNeedUpdate = true;
 
-//console.log( '', slab );
 
 				getPolyLoop2( surfaceSlab, ceiling );
 
@@ -1337,6 +1351,7 @@
 
 				surfaces.push( surfaceSlab );
 
+        //always create a slab if you are on level 1
 				if ( storeyCount === 1 ) {
 
 					slabOnGrade = slab.clone();
@@ -1537,7 +1552,8 @@
 				"@id": "surface-" + surfaceCount,
 				Name: 'storey-' + storey + '-slabongrade-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90
+					Azimuth: 90,
+					Tilte : 180 //this is ok for now, but technically both should be calculated
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: { "@spaceIdRef": "space-" + spaceCount },
@@ -1552,7 +1568,8 @@
 				"@id": "surface-" + theBuilding.surfaceCount,
 				Name: 'storey-' + storey + '-ceiling-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90
+					Azimuth: 90,
+					Tilt : 0 //this is ok for now, but technically both should be calculated
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: [
@@ -1570,7 +1587,8 @@
 				"@id": "surface-" + surfaceCount,
 				Name: 'storey-' + storey + '-roof-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90
+					Azimuth: 90,
+					Tilt:0 //this is ok for now, but technically both should be calculated
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: { "@spaceIdRef": "space-" + spaceCount },
@@ -1591,9 +1609,10 @@
 
 // this function works OK but creates too many CartesianPoint elements.
 // See checkGbxmlData below for temporary search and replace fix
+//(I actually believe it is doing this right, the problem is the converter from json to xml, it is mucking up the CartesianPoints)
 
-//console.log( 'surface', surface );
-//console.log( 'mesh.geo', mesh.geometry );
+    //this function needs to make sure the polyloops are created in the proper order
+
     console.log('making polyloop')
 		const meshNewGeometry = new THREE.Geometry().fromBufferGeometry( mesh.geometry );
 		const vertices = [];
@@ -1603,6 +1622,7 @@
 		for ( let k = 0; k < len; k++ ) {
 
 			const vector = meshNewGeometry.vertices[ k ].clone();
+			//before pushing, we should check and see 
 			vertices.push( mesh.localToWorld( vector ) );
 
 		}
@@ -1624,7 +1644,6 @@
 				{ Coordinate: Number( vertex.z.toFixed( 4 ) ) }
 
 			] };
-      console.log('cartesian point', point);
 			surface.PlanarGeometry.PolyLoop.push( point );
 
 		}
@@ -1875,25 +1894,24 @@
     console.log("gbxml: ", gbxml)
 
 		var xmlText = new XMLSerializer().serializeToString( gbxml );
-		xmlText = formatXml(xmlText)
-    var inner_id = 'txtGbxml';
-    openInspectorWindow(bindToInspectorWindow, inner_id, xmlText);
-
-		
+		//console.log(typeof(xmlText));
 
     // the kludge to get around getPolyLoop fail
+    var repre = /<\/CartesianPoint>\<CartesianPoint>/g
+    var mods = xmlText.replace(repre,'')
+    //console.log(mods);
+		formatted = formatXml(mods)
+    var inner_id = 'txtGbxml';
+    openInspectorWindow(bindToInspectorWindow, inner_id, formatted);
 
-		re = /\<\/CartesianPoint>\<CartesianPoint>/gi;
+    
 
-		txtGbxml.value = txtGbxml.value.replace( re, '' )
-
-		re = /\<\/PolyLoop>\<PolyLoop>/gi;
-
-		txtGbxml.value = txtGbxml.value.replace( re, '' )
-
-		txtGbxml.value = formatXml( txtGbxml.value );
-
-
+		//var re = /\<\/CartesianPoint>\<CartesianPoint>/gi;
+    //xmlText = xmlText.replace( re, '' )
+    // re = /\<\/PolyLoop>\<PolyLoop>/gi;
+		// txtGbxml.value = txtGbxml.value.replace( re, '' )
+		// txtGbxml.value = formatXml( txtGbxml.value );
+    
 
 	}
 
