@@ -1191,10 +1191,13 @@
 		console.log('binding to '+id+' window.')
 		document.addEventListener('click', function handler(e){
 			console.log(e.target);
+			console.log(e.target.id);
     	if(e.target && e.target.id == id)
     	{
+    		console.log("removing child from parent");
     	  e.target.parentNode.removeChild( e.target );	
     	}
+    	console.log("Current target: ",e.currentTarget)
 			e.currentTarget.removeEventListener(e.type,handler)
     }, true); 
 	}
@@ -1607,22 +1610,23 @@
 
 	function getPolyLoop2( surface, mesh ) {
 
-// this function works OK but creates too many CartesianPoint elements.
-// See checkGbxmlData below for temporary search and replace fix
-//(I actually believe it is doing this right, the problem is the converter from json to xml, it is mucking up the CartesianPoints)
+    // this function works OK but creates too many CartesianPoint elements.
+    // See checkGbxmlData below for temporary search and replace fix
 
-    //this function needs to make sure the polyloops are created in the proper order
+
+    //this function needs to make sure the polyloops are created in the proper order (RHR conventions)
 
     console.log('making polyloop')
 		const meshNewGeometry = new THREE.Geometry().fromBufferGeometry( mesh.geometry );
 		const vertices = [];
-		const len = mesh.name.startsWith( 'exterior-wall' ) ? 4 : meshNewGeometry.vertices.length;
-//console.log( mesh.name, len );
+		//const len = mesh.name.startsWith( 'exterior-wall' ) ? 4 : meshNewGeometry.vertices.length;
+		const len = meshNewGeometry.vertices.length;
+    //console.log( mesh.name, len );
 
 		for ( let k = 0; k < len; k++ ) {
 
 			const vector = meshNewGeometry.vertices[ k ].clone();
-			//before pushing, we should check and see 
+			//before pushing, we should make sure RHR is being applied
 			vertices.push( mesh.localToWorld( vector ) );
 
 		}
@@ -1899,7 +1903,6 @@
     // the kludge to get around getPolyLoop fail
     var repre = /<\/CartesianPoint>\<CartesianPoint>/g
     var mods = xmlText.replace(repre,'')
-    //console.log(mods);
 		formatted = formatXml(mods)
     var inner_id = 'txtGbxml';
     openInspectorWindow(bindToInspectorWindow, inner_id, formatted);
@@ -2001,9 +2004,14 @@
 
 		if( !gbxml ) { alert( 'Get some building data first.' ); return; }
 
+    console.log("Saving gbxml.");
 		let blob;
     var xmlText = new XMLSerializer().serializeToString( gbxml );
-		xmlText = formatXml(xmlText);
+        // the kludge to get around getPolyLoop fail
+    var repre = /<\/CartesianPoint>\<CartesianPoint>/g
+    var mods = xmlText.replace(repre,'')
+		xmlText = formatXml(mods);
+    console.log(xmlText);
 
 		blob = new Blob( [ xmlText ],{ type: 'text/xml' } );
 
