@@ -1347,8 +1347,9 @@
 				ceiling.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, theBuilding.storeyHeight + delta ) );
 				ceiling.geometry.verticesNeedUpdate = true;
 
+				console.log("Ceiling geometry", ceiling.geometry);
 
-				getPolyLoop2( surfaceSlab, ceiling );
+				getPolyLoop2( surfaceSlab, ceiling, true );
 
 				surfaceCount ++;
 
@@ -1608,12 +1609,10 @@
 
 
 
-	function getPolyLoop2( surface, mesh ) {
+	function getPolyLoop2( surface, mesh, reverse=false ) {
 
     // this function works OK but creates too many CartesianPoint elements.
     // See checkGbxmlData below for temporary search and replace fix
-
-
     //this function needs to make sure the polyloops are created in the proper order (RHR conventions)
 
     console.log('making polyloop')
@@ -1637,20 +1636,45 @@
 
 		const cartesianPoint = [];
 
-		for ( let i = 0; i < vertices.length; i++ ) {
+		if(!reverse)
+		{
+			for ( let i = 0; i < vertices.length; i++ ) 
+			{
 
-			vertex = vertices[ i ];
+			  vertex = vertices[ i ];
 
-			const point = { CartesianPoint: [
+			  const point = { CartesianPoint: [
 
-				{ Coordinate: Number( vertex.x.toFixed( 4 ) ) },
-				{ Coordinate: Number( vertex.y.toFixed( 4 ) ) },
-				{ Coordinate: Number( vertex.z.toFixed( 4 ) ) }
+				  { Coordinate: Number( vertex.x.toFixed( 4 ) ) },
+				  { Coordinate: Number( vertex.y.toFixed( 4 ) ) },
+				  { Coordinate: Number( vertex.z.toFixed( 4 ) ) }
 
-			] };
-			surface.PlanarGeometry.PolyLoop.push( point );
+			  ] };
+			  surface.PlanarGeometry.PolyLoop.push( point );
 
+		  }
 		}
+		else
+		{
+			console.log("reversing polyloop coordinates");
+			let reversed = vertices.reverse();
+			for ( let i = 0; i < reversed.length; i++ ) 
+			{
+
+			  vertex = reversed[ i ];
+
+			  const point = { CartesianPoint: [
+
+				  { Coordinate: Number( vertex.x.toFixed( 4 ) ) },
+				  { Coordinate: Number( vertex.y.toFixed( 4 ) ) },
+				  { Coordinate: Number( vertex.z.toFixed( 4 ) ) }
+
+			  ] };
+			  surface.PlanarGeometry.PolyLoop.push( point );
+
+		  }
+		}
+		
 
 	}
 
