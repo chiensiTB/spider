@@ -1927,17 +1927,13 @@
     // the kludge to get around getPolyLoop fail
     var repre = /<\/CartesianPoint>\<CartesianPoint>/g
     var mods = xmlText.replace(repre,'')
-		formatted = formatXml(mods)
+
+    var repre2 = /<\/PolyLoop>\<PolyLoop>/g
+    var mods2 = mods.replace(repre2,'');
+		formatted = formatXml(mods2);
+
     var inner_id = 'txtGbxml';
     openInspectorWindow(bindToInspectorWindow, inner_id, formatted);
-
-    
-
-		//var re = /\<\/CartesianPoint>\<CartesianPoint>/gi;
-    //xmlText = xmlText.replace( re, '' )
-    // re = /\<\/PolyLoop>\<PolyLoop>/gi;
-		// txtGbxml.value = txtGbxml.value.replace( re, '' )
-		// txtGbxml.value = formatXml( txtGbxml.value );
     
 
 	}
@@ -2034,7 +2030,11 @@
         // the kludge to get around getPolyLoop fail
     var repre = /<\/CartesianPoint>\<CartesianPoint>/g
     var mods = xmlText.replace(repre,'')
-		xmlText = formatXml(mods);
+
+    var repre2 = /<\/PolyLoop>\<PolyLoop>/g
+    var mods2 = mods.replace(repre2,'');
+		xmlText = formatXml(mods2);
+
     console.log(xmlText);
 
 		blob = new Blob( [ xmlText ],{ type: 'text/xml' } );
