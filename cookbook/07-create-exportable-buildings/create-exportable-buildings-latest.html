@@ -8,7 +8,7 @@
 <meta name = "date" content = "2017-11-30" >
 <title>create exportable buildings r1.8 </title>
 <style>
-/* Copyright 2017 Ladybug Tools authors. MIT License */
+/* Copyright 2018 Ladybug Tools authors. MIT License */
 
 /* https://www.w3schools.com/colors/colors_names.asp // use colors and borders to help identify the scope of particular elements */
 
@@ -137,10 +137,8 @@
 
 <script>
 
-  
 
-  let vertAxis = new THREE.Vector3(0,0,1);
-  let negVertAxis = new THREE.Vector3(0,0,-1);
+
 	let json;
 	let gbxml;
 
@@ -970,8 +968,8 @@
 
 
 
-  // now all geometry created and in position, so read local data, transform to world, and add as text to items;
-  //by "angles" the author appears to mean "asimuth"
+// now all geometry created and in position, so read local data, transform to world, and add as text to items;
+
 	function addAngles() {
 
 		theBuilding.group.updateMatrixWorld( true );
@@ -986,20 +984,9 @@
 					angle = angle < 0 ? angle + 360 : angle;
 
 					child.userData.angle = angle;
-          console.log( 'ang', child.name, angle );
+//console.log( 'ang', child.name, angle );
 
 			}
-			if(child instanceof THREE.Mesh)
-			{
-				console.log('trying to calculate tilt');
-				console.log(child)
-
-				//console.log('tilt', Math.round( - child.getWorldRotation().x * 180 / Math.PI ))
-				//let tilt = 
-			}
-			
-				
-			
 
 		} );
 
@@ -1164,18 +1151,18 @@
 		theBuilding.shadeCount = 1;
 		theBuilding.area = 0;
 
-    
-		
+
+
 		initExportGbxml();
 		getBuildingStoreys();
 		getSurfaces();
 		getAdjacentBuildings();
     updateJson();
-		
+
 
 	}
 
-	
+
 
   function updateJson()
   {
@@ -1191,15 +1178,12 @@
 		console.log('binding to '+id+' window.')
 		document.addEventListener('click', function handler(e){
 			console.log(e.target);
-			console.log(e.target.id);
     	if(e.target && e.target.id == id)
     	{
-    		console.log("removing child from parent");
-    	  e.target.parentNode.removeChild( e.target );	
+    	  e.target.parentNode.removeChild( e.target );
     	}
-    	console.log("Current target: ",e.currentTarget)
 			e.currentTarget.removeEventListener(e.type,handler)
-    }, true); 
+    }, true);
 	}
 
 
@@ -1211,7 +1195,7 @@
 		 divJson.innerHTML = '<textarea id=' + id + '' + ' style=height:100%;width:100%; >' + innertext + '</textarea>';
      callback(id);
   }
- 
+
 
 	function initExportGbxml() {
 
@@ -1263,7 +1247,7 @@
 				DocumentHistory: []
 
 			}
-      
+
 		}
 	}
 
@@ -1325,18 +1309,16 @@
 
 				const slab = slabs.children[ j ];
 
-        
 				const slabGeometry = new THREE.Geometry().fromBufferGeometry( slab.geometry );
 //console.log( 'slabGeometry', slabGeometry  );
 
 				const area = THREE.ShapeUtils.area( slabGeometry.vertices.reverse() );
 				building.Area += area;
-				//console.log('the slab area: ', area);
-				//console.log( 'area', building.Area );
-				//console.log( 'area', area.toLocaleString() );
-				//console.log( 'volume', ( area * theBuilding.storeyHeight ).toLocaleString() );
+				console.log('the slab area: ', area);
+				console.log( 'area', building.Area );
+				console.log( 'area', area.toLocaleString() );
+				console.log( 'volume', ( area * theBuilding.storeyHeight ).toLocaleString() );
 
-        //decide whether to make ceiling or roof
 				const type = storeyCount === theBuilding.storeys ? 'slabRoof' : 'slabCeiling';
 
 				let surfaceSlab = getSlabType( type, storeyCount, surfaceCount, theBuilding.spaceCount );
@@ -1347,7 +1329,7 @@
 				ceiling.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( 0, 0, theBuilding.storeyHeight + delta ) );
 				ceiling.geometry.verticesNeedUpdate = true;
 
-				console.log("Ceiling geometry", ceiling.geometry);
+//console.log( '', slab );
 
 				getPolyLoop2( surfaceSlab, ceiling, true );
 
@@ -1355,7 +1337,6 @@
 
 				surfaces.push( surfaceSlab );
 
-        //always create a slab if you are on level 1
 				if ( storeyCount === 1 ) {
 
 					slabOnGrade = slab.clone();
@@ -1556,8 +1537,7 @@
 				"@id": "surface-" + surfaceCount,
 				Name: 'storey-' + storey + '-slabongrade-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90,
-					Tilte : 180 //this is ok for now, but technically both should be calculated
+					Azimuth: 90
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: { "@spaceIdRef": "space-" + spaceCount },
@@ -1572,8 +1552,7 @@
 				"@id": "surface-" + theBuilding.surfaceCount,
 				Name: 'storey-' + storey + '-ceiling-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90,
-					Tilt : 0 //this is ok for now, but technically both should be calculated
+					Azimuth: 90
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: [
@@ -1591,8 +1570,7 @@
 				"@id": "surface-" + surfaceCount,
 				Name: 'storey-' + storey + '-roof-space-' + spaceCount,
 				RectangularGeometry: {
-					Azimuth: 90,
-					Tilt:0 //this is ok for now, but technically both should be calculated
+					Azimuth: 90
 				},
 				CADOjectId: "none",
 				AdjacentSpaceId: { "@spaceIdRef": "space-" + spaceCount },
@@ -1611,21 +1589,20 @@
 
 	function getPolyLoop2( surface, mesh, reverse=false ) {
 
-    // this function works OK but creates too many CartesianPoint elements.
-    // See checkGbxmlData below for temporary search and replace fix
-    //this function needs to make sure the polyloops are created in the proper order (RHR conventions)
+// this function works OK but creates too many CartesianPoint elements.
+// See checkGbxmlData below for temporary search and replace fix
 
+//console.log( 'surface', surface );
+//console.log( 'mesh.geo', mesh.geometry );
     console.log('making polyloop')
 		const meshNewGeometry = new THREE.Geometry().fromBufferGeometry( mesh.geometry );
 		const vertices = [];
-		//const len = mesh.name.startsWith( 'exterior-wall' ) ? 4 : meshNewGeometry.vertices.length;
-		const len = meshNewGeometry.vertices.length;
-    //console.log( mesh.name, len );
+		const len = mesh.name.startsWith( 'exterior-wall' ) ? 4 : meshNewGeometry.vertices.length;
+//console.log( mesh.name, len );
 
 		for ( let k = 0; k < len; k++ ) {
 
 			const vector = meshNewGeometry.vertices[ k ].clone();
-			//before pushing, we should make sure RHR is being applied
 			vertices.push( mesh.localToWorld( vector ) );
 
 		}
@@ -1633,26 +1610,25 @@
 		mesh.userData.verticesWorld = vertices;
 
 //console.log( 'vertices', vertices );
-
-		const cartesianPoint = [];
-
+		
 		if(!reverse)
 		{
-			for ( let i = 0; i < vertices.length; i++ ) 
-			{
+			const cartesianPoint = [];
+			for ( let i = 0; i < vertices.length; i++ ) {
 
-			  vertex = vertices[ i ];
+				vertex = vertices[ i ];
 
-			  const point = { CartesianPoint: [
+				const point = { CartesianPoint: [
 
-				  { Coordinate: Number( vertex.x.toFixed( 4 ) ) },
-				  { Coordinate: Number( vertex.y.toFixed( 4 ) ) },
-				  { Coordinate: Number( vertex.z.toFixed( 4 ) ) }
+					{ Coordinate: Number( vertex.x.toFixed( 4 ) ) },
+					{ Coordinate: Number( vertex.y.toFixed( 4 ) ) },
+					{ Coordinate: Number( vertex.z.toFixed( 4 ) ) }
 
-			  ] };
-			  surface.PlanarGeometry.PolyLoop.push( point );
+				] };
+	      console.log('cartesian point', point);
+				surface.PlanarGeometry.PolyLoop.push( point );
 
-		  }
+			}
 		}
 		else
 		{
@@ -1674,8 +1650,6 @@
 
 		  }
 		}
-		
-
 	}
 
 
@@ -1922,19 +1896,18 @@
     console.log("gbxml: ", gbxml)
 
 		var xmlText = new XMLSerializer().serializeToString( gbxml );
-		//console.log(typeof(xmlText));
+		
+		// the kludge to get around getPolyLoop fail
 
-    // the kludge to get around getPolyLoop fail
-    var repre = /<\/CartesianPoint>\<CartesianPoint>/g
-    var mods = xmlText.replace(repre,'')
+		var repre = /\<\/CartesianPoint>\<CartesianPoint>/gi;
+		var mods = xmlText.replace( repre, '' )
 
-    var repre2 = /<\/PolyLoop>\<PolyLoop>/g
-    var mods2 = mods.replace(repre2,'');
+		var repre2 = /\<\/PolyLoop>\<PolyLoop>/gi;
+		var mods2 = mods.replace( repre2, '' )
 		formatted = formatXml(mods2);
 
     var inner_id = 'txtGbxml';
     openInspectorWindow(bindToInspectorWindow, inner_id, formatted);
-    
 
 	}
 
@@ -1977,7 +1950,7 @@
 	}
 
 
-  
+
 	function formatXml(xml) {
 
 // https://gist.github.com/sente/1083506/d2834134cd070dbcc08bf42ee27dabb746a1c54d
@@ -2024,18 +1997,15 @@
 
 		if( !gbxml ) { alert( 'Get some building data first.' ); return; }
 
-    console.log("Saving gbxml.");
 		let blob;
     var xmlText = new XMLSerializer().serializeToString( gbxml );
-        // the kludge to get around getPolyLoop fail
+		    // the kludge to get around getPolyLoop fail
     var repre = /<\/CartesianPoint>\<CartesianPoint>/g
     var mods = xmlText.replace(repre,'')
 
     var repre2 = /<\/PolyLoop>\<PolyLoop>/g
     var mods2 = mods.replace(repre2,'');
 		xmlText = formatXml(mods2);
-
-    console.log(xmlText);
 
 		blob = new Blob( [ xmlText ],{ type: 'text/xml' } );
 
